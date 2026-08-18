@@ -1,0 +1,39 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.4.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Deploy to aanrozy.github.io
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: build
+          repository: aanrozy/aanrozy.github.io
+          branch: gh-pages
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+          clean: true

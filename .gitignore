@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+studio/node_modules/
+
+# Build outputs
+build/
+dist/
+studio/dist/
+.svelte-kit/
+
+# Sanity
+.sanity/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# System
+.DS_Store
+*.log
+
+# Editor
+.vscode/
+.idea/
