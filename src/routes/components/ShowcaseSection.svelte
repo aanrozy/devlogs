@@ -106,6 +106,63 @@
 		}
 	}
 
+	function enableDragScroll(
+		container: HTMLElement,
+		tween: gsap.core.Tween | null,
+	) {
+		let isDragging = false;
+		let startX = 0;
+		let startScrollLeft = 0;
+		let dragDistance = 0;
+		let suppressClick = false;
+
+		container.addEventListener("pointerdown", (e) => {
+			if (e.pointerType === "mouse" && e.button !== 0) return;
+			isDragging = true;
+			suppressClick = false;
+			dragDistance = 0;
+			startX = e.clientX;
+			startScrollLeft = container.scrollLeft;
+			tween?.pause();
+			try {
+				container.setPointerCapture(e.pointerId);
+			} catch {
+				// ignore capture errors
+			}
+			container.classList.add("is-dragging");
+		});
+
+		container.addEventListener("pointermove", (e) => {
+			if (!isDragging) return;
+			const delta = e.clientX - startX;
+			dragDistance = Math.max(dragDistance, Math.abs(delta));
+			container.scrollLeft = startScrollLeft - delta;
+			if (dragDistance > 8) suppressClick = true;
+		});
+
+		function endDrag() {
+			if (!isDragging) return;
+			isDragging = false;
+			container.classList.remove("is-dragging");
+			tween?.resume();
+		}
+
+		container.addEventListener("pointerup", endDrag);
+		container.addEventListener("pointercancel", endDrag);
+
+		container.addEventListener(
+			"click",
+			(e) => {
+				if (suppressClick) {
+					e.preventDefault();
+					e.stopPropagation();
+					suppressClick = false;
+				}
+			},
+			true,
+		);
+	}
+
 	onMount(() => {
 		// Entrance Animation for Header
 		gsap.from(sectionHeader.children, {
@@ -124,6 +181,8 @@
 		setTimeout(() => {
 			row1Tween = startAutoScroll(row1Container, "left", 50);
 			row2Tween = startAutoScroll(row2Container, "right", 50);
+			enableDragScroll(row1Container, row1Tween);
+			enableDragScroll(row2Container, row2Tween);
 		}, 100);
 
 		// Hover controls for Row 1
@@ -131,16 +190,12 @@
 		row1Container?.addEventListener("mouseleave", () =>
 			row1Tween?.resume(),
 		);
-		row1Container?.addEventListener("touchstart", () => row1Tween?.pause());
-		row1Container?.addEventListener("touchend", () => row1Tween?.resume());
 
 		// Hover controls for Row 2
 		row2Container?.addEventListener("mouseenter", () => row2Tween?.pause());
 		row2Container?.addEventListener("mouseleave", () =>
 			row2Tween?.resume(),
 		);
-		row2Container?.addEventListener("touchstart", () => row2Tween?.pause());
-		row2Container?.addEventListener("touchend", () => row2Tween?.resume());
 
 		return () => {
 			row1Tween?.kill();
@@ -330,6 +385,15 @@
 	.carousel-inner {
 		padding-left: 1rem;
 		padding-right: 1rem;
+		touch-action: pan-y;
+		cursor: grab;
+		user-select: none;
+		-webkit-user-select: none;
+	}
+
+	.carousel-inner.is-dragging {
+		cursor: grabbing;
+		scroll-behavior: auto;
 	}
 
 	@media (min-width: 768px) {
