@@ -31,7 +31,7 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: build
-          repository: aanrozy/aanrozy.github.io
+          repository-name: aanrozy/aanrozy.github.io
           branch: gh-pages
           ssh-key: ${{ secrets.DEPLOY_KEY }}
           clean: true
